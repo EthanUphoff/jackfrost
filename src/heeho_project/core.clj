@@ -96,9 +96,27 @@
        :else (recur (rest rem-args) (rest rem-vals) (conj result (str "(defn " (first rem-args) " ";[& args] (" (str/replace (str/replace (str (first rem-vals)) #"\#" "") #"\'" "") " args))"))))))
                 (force-args (first rem-vals)) ")"))))))
 
+(defn apply-persist
+ [& vars]
+ (map #(clojure.string/includes? % "Persistent") vars))
+
+(defn check-types
+  [vars x]
+  (let [y (cond->> vars
+            true meta
+            true :arglists
+            (= x "apply-persist") (map #(map type %))
+            true (map #(map str %))
+            true (map vec)
+            true vec)
+        z (map #(apply-persist %) y)]
+           (boolean? (some #(= (seq [true]) %) z))))
+
 (defn conversion [x]
   (loop [rem-args x
          result []]
     (cond
       (empty? rem-args) (read-eval-all (create-hee-ho-defn result x))
+      (check-types (first rem-args) "apply-persist") (recur (rest rem-args) result)
+      ;(or ((meta (first rem-args)) :macro) ((meta (first rem-args)) :special-form)) (recur (rest rem-args) result)
       :else (recur (rest rem-args) (conj result (hee-ho-time result (remove-consonants-count (re-write (first rem-args)))))))))
