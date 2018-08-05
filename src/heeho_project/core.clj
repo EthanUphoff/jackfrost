@@ -97,8 +97,11 @@
                 (force-args (first rem-vals)) ")"))))))
 
 (defn conversion [x]
-  (loop [rem-args x
-         result []]
-    (cond
-      (empty? rem-args) (read-eval-all (create-hee-ho-defn result x))
-      :else (recur (rest rem-args) (conj result (hee-ho-time result (remove-consonants-count (re-write (first rem-args)))))))))
+  (do (println "Would you really like to define every function in this library as he hoo? (Y/N)")
+    (if (= (read-line) "Y")
+      (loop [rem-args x
+            result []]
+        (cond
+          (empty? rem-args) (read-eval-all (create-hee-ho-defn result x))
+          :else (recur (rest rem-args) (conj result (hee-ho-time result (remove-consonants-count (re-write (first rem-args))))))))
+       (println "hee ho has not been generated"))))
