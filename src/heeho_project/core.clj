@@ -116,11 +116,14 @@
                 (force-args (first rem-vals)) ")"))))))
 
 (defn conversion [x]
-  (loop [rem-args x
-         result []]
-    (cond
-      (empty? rem-args) (read-eval-all (create-hee-ho-defn result x))
-      (check-types (first rem-args) "apply-persist") (recur (rest rem-args) result)
-      (nil? (:arglists (meta (first rem-args)))) (recur (rest rem-args) result)
-      (or ((meta (first rem-args)) :macro) ((meta (first rem-args)) :special-form)) (recur (rest rem-args) result)
-      :else (recur (rest rem-args) (conj result (hee-ho-time result (remove-consonants-count (re-write (first rem-args)))))))))
+  (do (println "Would you really like to define every function in this library as he hoo? (Y/N)")
+    (if (= (read-line) "Y")
+      (loop [rem-args x
+            result []]
+        (cond
+          (empty? rem-args) (read-eval-all (create-hee-ho-defn result x))
+          (check-types (first rem-args) "apply-persist") (recur (rest rem-args) result)
+          (nil? (:arglists (meta (first rem-args)))) (recur (rest rem-args) result)
+          (or ((meta (first rem-args)) :macro) ((meta (first rem-args)) :special-form)) (recur (rest rem-args) result)
+          :else (recur (rest rem-args) (conj result (hee-ho-time result (remove-consonants-count (re-write (first rem-args))))))))
+       (println "hee ho has not been generated"))))
