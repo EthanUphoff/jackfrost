@@ -65,6 +65,22 @@
       (str/replace #"o" "e")
       (str/replace #"a" "e")))
 
+(defn apply-persist
+ [& vars]
+ (map #(clojure.string/includes? % "Persistent") vars))
+
+(defn check-types
+  [vars x]
+  (let [y (cond->> vars
+            true meta
+            true :arglists
+            (= x "apply-persist") (map #(map type %))
+            true (map #(map str %))
+            true (map vec)
+            true vec)
+        z (map #(apply-persist %) y)]
+           (boolean? (some #(= (seq [true]) %) z))))
+
 (defn return-hee-ho [result x]
   (loop [finalheeho x]
      (cond
@@ -93,6 +109,9 @@
           result []]
      (cond
        (empty? rem-args) result
+       (nil? (:arglists (meta (first rem-vals)))) (recur rem-args (rest rem-vals) result)
+       (check-types (first rem-vals) "apply-persist") (recur rem-args (rest rem-vals) result)
+       (or ((meta (first rem-vals)) :macro) ((meta (first rem-vals)) :special-form)) (recur rem-args (rest rem-vals) result)
        :else (recur (rest rem-args) (rest rem-vals) (conj result (str "(defn " (first rem-args) " ";[& args] (" (str/replace (str/replace (str (first rem-vals)) #"\#" "") #"\'" "") " args))"))))))
                 (force-args (first rem-vals)) ")"))))))
 
@@ -103,5 +122,8 @@
             result []]
         (cond
           (empty? rem-args) (read-eval-all (create-hee-ho-defn result x))
+          (check-types (first rem-args) "apply-persist") (recur (rest rem-args) result)
+          (nil? (:arglists (meta (first rem-args)))) (recur (rest rem-args) result)
+          (or ((meta (first rem-args)) :macro) ((meta (first rem-args)) :special-form)) (recur (rest rem-args) result)
           :else (recur (rest rem-args) (conj result (hee-ho-time result (remove-consonants-count (re-write (first rem-args))))))))
        (println "hee ho has not been generated"))))
